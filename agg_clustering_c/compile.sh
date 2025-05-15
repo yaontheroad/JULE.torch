@@ -1,1 +1,0 @@
-gcc -Wall -shared -fPIC -fopenmp -o agg_clustering.so -I/home/jwyang/torch/install/include/TH -I/home/jwyang/torch/install/include -L/home/jwyang/torch/pkg/torch/build/lib/luaT -lluaT_static agg_clustering.c

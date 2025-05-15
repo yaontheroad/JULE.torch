@@ -1,106 +1,67 @@
-# Joint Unsupervised Learning (JULE) of Deep Representations and Image Clusters.
+# JULE: Joint Unsupervised Learning of Deep Representations and Image Clusters (PyTorch)
 
-### Overview
+This is a PyTorch implementation of the CVPR 2016 paper [Joint Unsupervised Learning of Deep Representations and Image Clusters](https://arxiv.org/abs/1604.03628).
 
-This project is a Torch implementation for our CVPR 2016 [paper](https://arxiv.org/abs/1604.03628), which performs jointly unsupervised learning of deep CNN and image clusters. The intuition behind this is that better image representation will facilitate clustering, while better clustering results will help representation learning. Given a unlabeled dataset, it will iteratively learn CNN parameters unsupervisedly and cluster images.
+## Overview
 
-### Disclaimer
-This is a torch version reimplementation to the code used in our CVPR paper. There is a slight difference between the code used to report the results in our paper. The Caffe version code can be found [here](https://github.com/jwyang/JULE-Caffe).
+This project performs joint unsupervised learning of deep CNN and image clusters. The intuition is that better image representation will facilitate clustering, while better clustering results will help representation learning. Given an unlabeled dataset, it will iteratively learn CNN parameters unsupervisedly and cluster images.
 
-### License
+## Installation
 
-This code is released under the MIT License (refer to the LICENSE file for details).
+1. Clone this repository:
+```bash
+git clone https://github.com/yourusername/JULE-pytorch.git
+cd JULE-pytorch
+```
 
-### Citation
-If you find our code is useful in your researches, please consider citing:
+2. Create a virtual environment and install dependencies:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows, use: venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-    @inproceedings{yangCVPR2016joint,
-        Author = {Yang, Jianwei and Parikh, Devi and Batra, Dhruv},
-        Title = {Joint Unsupervised Learning of Deep Representations and Image Clusters},
-        Booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
-        Year = {2016}
-    }
+## Usage
 
-### Dependencies
+1. Train the model:
+```bash
+python train.py --dataset USPS --eta 0.9
+```
 
-1. [Torch](http://torch.ch/). Install Torch by:
+Key parameters:
+- `--dataset`: Dataset name (USPS, MNIST-test, etc.)
+- `--eta`: Unfolding rate (0.2 for face datasets, 0.9 for others)
+- `--num_nets`: Number of parallel models to train
+- `--use_fast`: Whether to use fast affinity updating algorithm
+- `--batch_size`: Batch size for training
+- `--learning_rate`: Base learning rate
 
-   ```bash
-   $ curl -s https://raw.githubusercontent.com/torch/ezinstall/master/install-deps | bash
-   $ git clone https://github.com/torch/distro.git ~/torch --recursive
-   $ cd ~/torch; 
-   $ ./install.sh      # and enter "yes" at the end to modify your bashrc
-   $ source ~/.bashrc
-   ```
+## Project Structure
 
-   After installing torch, you may also need install some packages using [LuaRocks](https://luarocks.org/):
+```
+JULE-pytorch/
+├── datasets/           # Dataset loading and processing
+├── models/            # Network architecture definitions
+├── criterions/        # Loss functions
+├── clustering/        # Clustering algorithms
+├── affinity/         # Affinity computation
+├── evaluate/         # Evaluation metrics
+└── utils/            # Utility functions
+```
 
-   ```bash
-   $ luarocks install nn
-   $ luarocks install image 
-   ```
+## Citation
 
-   It is preferred to run the code on GPU. Thus you need to install cunn:
+If you find this code useful in your research, please consider citing:
 
-   ```bash
-   $ luarocks install cunn
-   ```
+```bibtex
+@inproceedings{yangCVPR2016joint,
+    Author = {Yang, Jianwei and Parikh, Devi and Batra, Dhruv},
+    Title = {Joint Unsupervised Learning of Deep Representations and Image Clusters},
+    Booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+    Year = {2016}
+}
+```
 
-2. [lua-knn](https://github.com/Saulzar/lua-knn). It is used to compute the distance between neighbor samples. Go into the folder, and then compile it with:
+## License
 
-   ```bash
-   $ luarocks make
-   ```
-
-Typically, you can run our code after installing the above two packages. Please let me know if error occurs.
-
-### Installation Using Nvidia-Docker
-
-1. Run `docker build -t <image name> .`
-1. Run `nvidia-docker run -it <image name> /bin/bash`
-
-### Train model
-
-1. It is very simple to run the code for training model. For example, if you want to train on *USPS* dataset, you can run:
-
-   ```bash
-   $ th train.lua -dataset USPS -eta 0.9
-   ```
-
-   **Note that it runs on fast mode by default.** You can change it to regular mode by setting "-use_fast 0". In the above command, eta is the unfolding rate. For face dataset, we recommand 0.2, while for other datasets, it is set to 0.9 to save training time. During training, you will see the normalize mutual information (NMI) for the clustering results.
-
-2. You can train multiple models in parallel by:
-
-   ```bash
-   $ th train.lua -dataset USPS -eta 0.9 -num_nets 5
-   ```
-   By this way, you weill get 5 different models, and thus 5 possible different results. Statistics such as mean and stddev can be computed on these results.
-
-3. You can also get the clustering performance when using raw image data and random CNN by
-   ```bash
-   $ th train.lua -dataset USPS -eta 0.9 -updateCNN 0
-   ```
-
-4. You can also change other hyper parameters for model training, such as K_s, K_c, number of epochs in each partial unrolled period, etc.
-
-### Datasets
-
-We upload six small datasets: COIL-20, USPS, MNIST-test, CMU-PIE, FRGC, UMist. The other large datasets, COIL-100, MNIST-full and YTF can be found in my google drive [here](https://drive.google.com/folderview?id=0B9J-9A2jotGRT25vSDhUWTQxVWs&usp=sharing).
-
-### Train on your own datasets
-
-Alternatively, you can train the model on your own dataset. As preparations, you need:
-
-1. Create a hdf5 file with size of NxCxHxW, where N is the total number of images, C is the number of channels, H is the height of image, and W the width of image. Then move it to datasets/*dataset_name*/data4torch.h5
-
-2. Create a lua file to define the network architecture for your dataset. Put it in models_def/*dataset_name*.lua.
-
-3. Afterwards, you can run train.lua by specifying the dataset name as your own dataset. That's it!
-
-### Compared Approaches
-
-We upload the code for the compared approaches in matlab folder. Please refer to the original paper for details and cite them properly. In this foler, we also attach the evaluation code for two metric: normalized mutual information (NMI) and clustering accuracy (AC).
-
-### Q&A
-
-You are welcome to send message to (jw2yang at vt.edu) if you have any issue on this code.
+This code is released under the MIT License.
